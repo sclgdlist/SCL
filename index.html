@@ -26,7 +26,7 @@ h1{
 .sub{color:#7cb3d6}
 .wrap{max-width:1000px;margin:24px auto;padding:0 14px}
 
-.nav-tabs{display:flex;gap:10px;margin-bottom:18px;border-bottom:1px solid #1a365d;padding-bottom:10px}
+.nav-tabs{display:flex;gap:10px;margin-bottom:18px;border-bottom:1px solid #1a365d;padding-bottom:10px;flex-wrap:wrap}
 .tab-btn{
   background:#0d1926;
   color:#7cb3d6;
@@ -69,7 +69,7 @@ input,select{
 input:focus,select:focus{border-color:#00f2ff}
 input{flex:1;min-width:220px}
 
-/* Karta poziomu i efekt unoszenia (Hover) */
+/* Karta poziomu i gracza */
 .card{
   background:#0d1926;
   border:1px solid #1a365d;
@@ -106,6 +106,7 @@ input{flex:1;min-width:220px}
 .details{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #1a365d}
 .details.active{display:block}
 .level-id{font-size:14px;color:#7cb3d6;margin-bottom:10px}
+.completed-list{margin-top:8px;font-size:14px;color:#80f7ff}
 .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000}
 .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 
@@ -123,12 +124,13 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
 <main class="wrap">
   <!-- Tabs Navigation -->
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchList('scl')">SCL List</button>
-    <button class="tab-btn" onclick="switchList('legacy')">Legacy List</button>
+    <button class="tab-btn active" onclick="switchList('scl', event)">SCL List</button>
+    <button class="tab-btn" onclick="switchList('legacy', event)">Legacy List</button>
+    <button class="tab-btn" onclick="switchList('stats', event)">Stats Viewer</button>
   </div>
 
   <!-- Submission Rules Section -->
-  <div class="rules-box">
+  <div id="rules-container" class="rules-box">
     <h2>Submission Rules</h2>
     <ul>
       <li>The level must be longer than 5 seconds and less than 30 seconds.</li>
@@ -138,8 +140,8 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
   </div>
 
   <!-- Controls -->
-  <div class="controls">
-    <input id="search" placeholder="Search level or creator...">
+  <div class="controls" id="controls-container">
+    <input id="search" placeholder="Search level, creator or player...">
     <select id="difficulty">
       <option value="">All Difficulties</option>
       <option>Extreme Demon</option>
@@ -157,28 +159,55 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
 <script>
 let currentTab = "scl";
 
+// Lista poziomów (poziom id służy do powiązania z graczy)
 const sclLevels = [
   {
+    id: "conispidy",
     rank: 1,
     name: "conispidy",
     creator: "capmind",
     difficulty: "Extreme Demon",
     points: 500,
-    id: "148967435",
+    id_ingame: "148967435",
     videoEmbedUrl: "https://www.youtube.com/embed/qYk8IHEsLdI"
   },
   {
+    id: "night",
     rank: 2,
     name: "night",
     creator: "szymipek",
     difficulty: "Extreme Demon",
     points: 480,
-    id: "124930560",
+    id_ingame: "124930560",
     videoEmbedUrl: "https://www.youtube.com/embed/utrtXEI3HmE"
   }
 ];
 
 const legacyLevels = [];
+
+// Lista graczy — Wpisujesz tylko ID ukończonych poziomów
+const players = [
+  {
+    name: "Capmind",
+    completed: ["conispidy"]
+  },
+  {
+    name: "Szymipek",
+    completed: ["night"]
+  }
+];
+
+// Automatyczne przeliczanie punktów gracza
+function getPlayerPoints(player) {
+  let total = 0;
+  player.completed.forEach(levelId => {
+    const level = sclLevels.find(l => l.id === levelId);
+    if (level) {
+      total += level.points;
+    }
+  });
+  return total;
+}
 
 function toggleDetails(index) {
   const detailsEl = document.getElementById(`details-${index}`);
@@ -187,42 +216,84 @@ function toggleDetails(index) {
   }
 }
 
-function switchList(tab) {
+function switchList(tab, e) {
   currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  if (e) e.target.classList.add('active');
+
+  const diffSelect = document.getElementById("difficulty");
+  const rulesBox = document.getElementById("rules-container");
+
+  if (tab === 'stats') {
+    diffSelect.style.display = "none";
+    rulesBox.style.display = "none";
+  } else {
+    diffSelect.style.display = "inline-block";
+    rulesBox.style.display = "block";
+  }
+
   render();
 }
 
 function render() {
   const q = document.getElementById("search").value.toLowerCase();
-  const d = document.getElementById("difficulty").value;
-  
-  const levels = currentTab === 'scl' ? sclLevels : legacyLevels;
+  const listEl = document.getElementById("list");
 
-  const filtered = levels.filter(x => 
-    (x.name + " " + x.creator).toLowerCase().includes(q) && (!d || x.difficulty === d)
-  );
+  if (currentTab === 'stats') {
+    // Generowanie widoku Stats Viewer
+    const sortedPlayers = players.map(p => ({
+      name: p.name,
+      points: getPlayerPoints(p),
+      completed: p.completed
+    })).sort((a, b) => b.points - a.points);
 
-  document.getElementById("list").innerHTML = filtered.map((x, i) => `
-    <div class="card" onclick="toggleDetails(${i})">
-      <div class="card-main">
-        <div class="rank">#${x.rank}</div>
-        <div>
-          <div class="name">${x.name}</div>
-          <div class="creator">by ${x.creator}</div>
-          <div class="difficulty">${x.difficulty}</div>
+    const filteredPlayers = sortedPlayers.filter(p => p.name.toLowerCase().includes(q));
+
+    listEl.innerHTML = filteredPlayers.map((p, i) => `
+      <div class="card" onclick="toggleDetails(${i})">
+        <div class="card-main">
+          <div class="rank">#${i + 1}</div>
+          <div>
+            <div class="name">${p.name}</div>
+            <div class="creator">Completed: ${p.completed.length} level(s)</div>
+          </div>
+          <div class="points">${p.points} pts</div>
         </div>
-        <div class="points">${x.points} pts</div>
-      </div>
-      <div class="details" id="details-${i}">
-        <div class="level-id"><strong>Level ID:</strong> ${x.id}</div>
-        <div class="video-container">
-          <iframe src="${x.videoEmbedUrl}" allowfullscreen></iframe>
+        <div class="details" id="details-${i}">
+          <div class="completed-list"><strong>Beaten levels:</strong> ${p.completed.join(", ")}</div>
         </div>
       </div>
-    </div>
-  `).join("") || `<p style="text-align:center;color:#7cb3d6;">No levels found in ${currentTab.toUpperCase()} list.</p>`;
+    `).join("") || `<p style="text-align:center;color:#7cb3d6;">No players found.</p>`;
+
+  } else {
+    // Generowanie widoku poziomów (SCL / Legacy)
+    const d = document.getElementById("difficulty").value;
+    const levels = currentTab === 'scl' ? sclLevels : legacyLevels;
+
+    const filtered = levels.filter(x => 
+      (x.name + " " + x.creator).toLowerCase().includes(q) && (!d || x.difficulty === d)
+    );
+
+    listEl.innerHTML = filtered.map((x, i) => `
+      <div class="card" onclick="toggleDetails(${i})">
+        <div class="card-main">
+          <div class="rank">#${x.rank}</div>
+          <div>
+            <div class="name">${x.name}</div>
+            <div class="creator">by ${x.creator}</div>
+            <div class="difficulty">${x.difficulty}</div>
+          </div>
+          <div class="points">${x.points} pts</div>
+        </div>
+        <div class="details" id="details-${i}">
+          <div class="level-id"><strong>Level ID:</strong> ${x.id_ingame}</div>
+          <div class="video-container">
+            <iframe src="${x.videoEmbedUrl}" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    `).join("") || `<p style="text-align:center;color:#7cb3d6;">No levels found in ${currentTab.toUpperCase()} list.</p>`;
+  }
 }
 
 document.getElementById("search").oninput = render;
