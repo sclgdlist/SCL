@@ -24,7 +24,7 @@ h1{
 }
 
 .sub{color:#7cb3d6}
-.wrap{max-width:1000px;margin:24px auto;padding:0 14px}
+.wrap{max-width:700px;margin:24px auto;padding:0 14px}
 
 .nav-tabs{display:flex;gap:10px;margin-bottom:18px;border-bottom:1px solid #1a365d;padding-bottom:10px;flex-wrap:wrap}
 .tab-btn{
@@ -69,47 +69,88 @@ input,select{
 input:focus,select:focus{border-color:#00f2ff}
 input{flex:1;min-width:220px}
 
+/* Karta w stylu Pointercrate */
 .card{
   background:#0d1926;
   border:1px solid #1a365d;
-  border-radius:10px;
-  padding:14px;
-  margin:9px 0;
+  border-radius:12px;
+  margin:18px 0;
   cursor:pointer;
+  overflow:hidden;
   transition:transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover{
   border-color:#00f2ff;
-  transform:translateY(-5px);
+  transform:translateY(-4px);
   box-shadow:0 8px 20px rgba(0, 242, 255, 0.15);
 }
 
-.card-main{display:grid;grid-template-columns:65px 1fr auto;gap:16px;align-items:center}
-.rank{
-  font-size:25px;
+.card-thumb-wrap{
+  position:relative;
+  width:100%;
+  height:180px;
+  overflow:hidden;
+}
+
+.card-thumb{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.card-thumb-overlay{
+  position:absolute;
+  top:0; left:0; right:0; bottom:0;
+  background:linear-gradient(to bottom, rgba(13,25,38,0) 40%, #0d1926 100%);
+}
+
+.card-body{
+  padding:16px 20px 20px;
+}
+
+.card-title{
+  font-size:22px;
   font-weight:bold;
-  text-align:center;
+  color:#ffffff;
+  margin-bottom:4px;
+}
+
+.card-creator{
+  font-size:15px;
+  color:#7cb3d6;
+  margin-bottom:8px;
+}
+
+.card-creator strong{
+  color:#e6edf3;
+}
+
+.card-points{
+  font-size:14px;
   color:#00f2ff;
-  transition:transform 0.2s ease;
-}
-.card:hover .rank{
-  transform:scale(1.1);
+  font-weight:bold;
 }
 
+/* Karta Gracza (Stats Viewer) */
+.player-card-main{
+  display:grid;
+  grid-template-columns:65px 1fr auto;
+  gap:16px;
+  align-items:center;
+  padding:16px;
+}
+.rank{font-size:25px;font-weight:bold;text-align:center;color:#00f2ff}
 .name{font-size:18px;font-weight:bold;color:#ffffff}
-.creator{color:#7cb3d6;margin-top:5px}
 .points{font-weight:bold;text-align:right;color:#00f2ff}
-.difficulty{color:#80f7ff;margin-top:5px;font-size:13px}
 
-.details{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #1a365d}
+.details{display:none;padding:0 20px 20px;border-top:1px solid #1a365d;margin-top:10px}
 .details.active{display:block}
-.level-id{font-size:14px;color:#7cb3d6;margin-bottom:10px}
+.level-id{font-size:14px;color:#7cb3d6;margin:14px 0 10px}
 .completed-list{margin-top:8px;font-size:14px;color:#80f7ff}
 .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000}
 .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 
-/* Sekcja z pogromcami poziomu (Victors) */
 .victors-box{
   margin-top:14px;
   padding:12px;
@@ -125,11 +166,7 @@ input{flex:1;min-width:220px}
   letter-spacing:0.5px;
   margin-bottom:8px;
 }
-.victors-list{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
+.victors-list{display:flex;flex-wrap:wrap;gap:6px}
 .victor-chip{
   background:#0d1926;
   color:#e6edf3;
@@ -138,11 +175,9 @@ input{flex:1;min-width:220px}
   padding:4px 12px;
   font-size:13px;
   font-weight:500;
-  box-shadow:0 0 6px rgba(0, 242, 255, 0.1);
 }
 
 footer{text-align:center;color:#7cb3d6;padding:30px}
-@media(max-width:600px){.card-main{grid-template-columns:48px 1fr}.points{grid-column:2;text-align:left}}
 </style>
 </head>
 <body>
@@ -153,14 +188,12 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
 </header>
 
 <main class="wrap">
-  <!-- Tabs Navigation -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchList('scl', event)">SCL List</button>
     <button class="tab-btn" onclick="switchList('legacy', event)">Legacy List</button>
     <button class="tab-btn" onclick="switchList('stats', event)">Stats Viewer</button>
   </div>
 
-  <!-- Submission Rules Section -->
   <div id="rules-container" class="rules-box">
     <h2>Submission Rules</h2>
     <ul>
@@ -170,7 +203,6 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
     </ul>
   </div>
 
-  <!-- Controls -->
   <div class="controls" id="controls-container">
     <input id="search" placeholder="Search level, creator or player...">
     <select id="difficulty">
@@ -181,7 +213,6 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
     </select>
   </div>
 
-  <!-- List Container -->
   <div id="list"></div>
 </main>
 
@@ -190,6 +221,7 @@ footer{text-align:center;color:#7cb3d6;padding:30px}
 <script>
 let currentTab = "scl";
 
+// Miniaturki pobierają się automatycznie z ID z filmu na YouTube
 const sclLevels = [
   {
     id: "conispidy",
@@ -199,7 +231,8 @@ const sclLevels = [
     difficulty: "Extreme Demon",
     points: 500,
     id_ingame: "148967435",
-    videoEmbedUrl: "https://www.youtube.com/embed/qYk8IHEsLdI"
+    videoEmbedUrl: "https://www.youtube.com/embed/qYk8IHEsLdI",
+    thumbnail: "https://img.youtube.com/vi/qYk8IHEsLdI/hqdefault.jpg"
   },
   {
     id: "night",
@@ -209,46 +242,34 @@ const sclLevels = [
     difficulty: "Extreme Demon",
     points: 480,
     id_ingame: "124930560",
-    videoEmbedUrl: "https://www.youtube.com/embed/utrtXEI3HmE"
+    videoEmbedUrl: "https://www.youtube.com/embed/utrtXEI3HmE",
+    thumbnail: "https://img.youtube.com/vi/utrtXEI3HmE/hqdefault.jpg"
   }
 ];
 
 const legacyLevels = [];
 
 const players = [
-  {
-    name: "Capmind",
-    completed: ["conispidy"]
-  },
-  {
-    name: "Szymipek",
-    completed: ["night"]
-  }
+  { name: "Capmind", completed: ["conispidy"] },
+  { name: "Szymipek", completed: ["night"] }
 ];
 
 function getPlayerPoints(player) {
   let total = 0;
   player.completed.forEach(levelId => {
     const level = sclLevels.find(l => l.id === levelId);
-    if (level) {
-      total += level.points;
-    }
+    if (level) total += level.points;
   });
   return total;
 }
 
-// Pobieranie listy graczy, którzy ukończyli dany poziom
 function getVictors(levelId) {
-  return players
-    .filter(p => p.completed.includes(levelId))
-    .map(p => p.name);
+  return players.filter(p => p.completed.includes(levelId)).map(p => p.name);
 }
 
 function toggleDetails(index) {
   const detailsEl = document.getElementById(`details-${index}`);
-  if (detailsEl) {
-    detailsEl.classList.toggle("active");
-  }
+  if (detailsEl) detailsEl.classList.toggle("active");
 }
 
 function switchList(tab, e) {
@@ -276,27 +297,19 @@ function render() {
 
   if (currentTab === 'stats') {
     const sortedPlayers = players
-      .map(p => ({
-        name: p.name,
-        points: getPlayerPoints(p),
-        completed: p.completed
-      }))
+      .map(p => ({ name: p.name, points: getPlayerPoints(p), completed: p.completed }))
       .sort((a, b) => b.points - a.points);
 
-    const rankedPlayers = sortedPlayers.map((p, index) => ({
-      ...p,
-      rank: index + 1
-    }));
-
+    const rankedPlayers = sortedPlayers.map((p, index) => ({ ...p, rank: index + 1 }));
     const filteredPlayers = rankedPlayers.filter(p => p.name.toLowerCase().includes(q));
 
     listEl.innerHTML = filteredPlayers.map((p, i) => `
       <div class="card" onclick="toggleDetails(${i})">
-        <div class="card-main">
+        <div class="player-card-main">
           <div class="rank">#${p.rank}</div>
           <div>
             <div class="name">${p.name}</div>
-            <div class="creator">Completed: ${p.completed.length} level(s)</div>
+            <div style="color:#7cb3d6;font-size:14px;margin-top:4px;">Completed: ${p.completed.length} level(s)</div>
           </div>
           <div class="points">${p.points} pts</div>
         </div>
@@ -322,14 +335,14 @@ function render() {
 
       return `
         <div class="card" onclick="toggleDetails(${i})">
-          <div class="card-main">
-            <div class="rank">#${x.rank}</div>
-            <div>
-              <div class="name">${x.name}</div>
-              <div class="creator">by ${x.creator}</div>
-              <div class="difficulty">${x.difficulty}</div>
-            </div>
-            <div class="points">${x.points} pts</div>
+          <div class="card-thumb-wrap">
+            <img class="card-thumb" src="${x.thumbnail}" alt="${x.name}">
+            <div class="card-thumb-overlay"></div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">#${x.rank} – ${x.name}</div>
+            <div class="card-creator">published by <strong>${x.creator}</strong></div>
+            <div class="card-points">${x.points} points</div>
           </div>
           <div class="details" id="details-${i}">
             <div class="level-id"><strong>Level ID:</strong> ${x.id_ingame}</div>
