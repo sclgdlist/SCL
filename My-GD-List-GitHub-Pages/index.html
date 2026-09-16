@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My GD List</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif}
+header{padding:28px 18px;text-align:center;background:linear-gradient(135deg,#161b22,#21262d);border-bottom:1px solid #30363d}
+h1{margin:0 0 8px;font-size:34px}.sub{color:#8b949e}
+.wrap{max-width:1000px;margin:24px auto;padding:0 14px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+input,select{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:11px 12px;font-size:15px}
+input{flex:1;min-width:220px}
+.card{display:grid;grid-template-columns:65px 1fr auto;gap:16px;align-items:center;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px;margin:9px 0}
+.rank{font-size:25px;font-weight:bold;text-align:center}.name{font-size:18px;font-weight:bold}.creator{color:#8b949e;margin-top:5px}
+.points{font-weight:bold;text-align:right}.difficulty{color:#a5d6ff;margin-top:5px;font-size:13px}
+footer{text-align:center;color:#8b949e;padding:30px}
+@media(max-width:600px){.card{grid-template-columns:48px 1fr}.points{grid-column:2;text-align:left}}
+</style>
+</head>
+<body>
+<header><h1>My GD List</h1><div class="sub">Geometry Dash Demon Ranking</div></header>
+<main class="wrap">
+<div class="controls">
+<input id="search" placeholder="Szukaj poziomu lub twórcy...">
+<select id="difficulty"><option value="">Wszystkie trudności</option><option>Extreme Demon</option><option>Insane Demon</option><option>Hard Demon</option></select>
+</div>
+<div id="list"></div>
+</main>
+<footer>My GD List • własna lista poziomów</footer>
+<script>
+const levels=[
+{name:"Acheron",creator:"Ryamu",difficulty:"Extreme Demon",points:100},
+{name:"Tidal Wave",creator:"OniLink",difficulty:"Extreme Demon",points:95},
+{name:"Avernus",creator:"BoBoBoBoBoBoBo",difficulty:"Extreme Demon",points:90},
+{name:"Bloodbath",creator:"Riot",difficulty:"Extreme Demon",points:85},
+{name:"Artificial Ascent",creator:"ViPriN",difficulty:"Extreme Demon",points:80},
+{name:"Cataclysm",creator:"Ggb0y",difficulty:"Extreme Demon",points:75}
+];
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const d=document.getElementById("difficulty").value;
+ const filtered=levels.filter(x=>(x.name+" "+x.creator).toLowerCase().includes(q)&&(!d||x.difficulty===d));
+ document.getElementById("list").innerHTML=filtered.map((x,i)=>`
+ <div class="card"><div class="rank">#${i+1}</div>
+ <div><div class="name">${x.name}</div><div class="creator">by ${x.creator}</div><div class="difficulty">${x.difficulty}</div></div>
+ <div class="points">${x.points} pts</div></div>`).join("")||"<p>Nie znaleziono poziomów.</p>";
+}
+search.oninput=render; difficulty.onchange=render; render();
+</script>
+</body></html>
