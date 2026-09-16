@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SCL List</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif}
+header{padding:28px 18px;text-align:center;background:linear-gradient(135deg,#161b22,#21262d);border-bottom:1px solid #30363d}
+h1{margin:0 0 8px;font-size:34px}.sub{color:#8b949e}
+.wrap{max-width:1000px;margin:24px auto;padding:0 14px}
+.nav-tabs{display:flex;gap:10px;margin-bottom:18px;border-bottom:1px solid #30363d;padding-bottom:10px}
+.tab-btn{background:#161b22;color:#8b949e;border:1px solid #30363d;border-radius:8px;padding:10px 18px;font-size:16px;cursor:pointer;font-weight:bold;transition:0.2s}
+.tab-btn.active,.tab-btn:hover{background:#21262d;color:#58a6ff;border-color:#58a6ff}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+input,select{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:11px 12px;font-size:15px}
+input{flex:1;min-width:220px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px;margin:9px 0;cursor:pointer;transition:border-color 0.2s}
+.card:hover{border-color:#58a6ff}
+.card-main{display:grid;grid-template-columns:65px 1fr auto;gap:16px;align-items:center}
+.rank{font-size:25px;font-weight:bold;text-align:center}.name{font-size:18px;font-weight:bold}.creator{color:#8b949e;margin-top:5px}
+.points{font-weight:bold;text-align:right}.difficulty{color:#a5d6ff;margin-top:5px;font-size:13px}
+.details{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #30363d}
+.details.active{display:block}
+.level-id{font-size:14px;color:#8b949e;margin-bottom:10px}
+.video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000}
+.video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+footer{text-align:center;color:#8b949e;padding:30px}
+@media(max-width:600px){.card-main{grid-template-columns:48px 1fr}.points{grid-column:2;text-align:left}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SCL List</h1>
+  <div class="sub">Geometry Dash Demon Ranking</div>
+</header>
+
+<main class="wrap">
+  <!-- Tabs Navigation -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchList('scl')">SCL List</button>
+    <button class="tab-btn" onclick="switchList('legacy')">Legacy List</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input id="search" placeholder="Search level or creator...">
+    <select id="difficulty">
+      <option value="">All Difficulties</option>
+      <option>Extreme Demon</option>
+      <option>Insane Demon</option>
+      <option>Hard Demon</option>
+    </select>
+  </div>
+
+  <!-- List Container -->
+  <div id="list"></div>
+</main>
+
+<footer>SCL List • Geometry Dash Ranking</footer>
+
+<script>
+let currentTab = "scl";
+
+const sclLevels = [
+  {
+    name: "(night)",
+    creator: "szymipek",
+    difficulty: "Extreme Demon",
+    points: 500,
+    id: "124930560",
+    videoEmbedUrl: "https://www.youtube.com/embed/utrtXEI3HmE"
+  }
+];
+
+const legacyLevels = [];
+
+function toggleDetails(index) {
+  const detailsEl = document.getElementById(`details-${index}`);
+  if (detailsEl) {
+    detailsEl.classList.toggle("active");
+  }
+}
+
+function switchList(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function render() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const d = document.getElementById("difficulty").value;
+  
+  const levels = currentTab === 'scl' ? sclLevels : legacyLevels;
+
+  const filtered = levels.filter(x => 
+    (x.name + " " + x.creator).toLowerCase().includes(q) && (!d || x.difficulty === d)
+  );
+
+  document.getElementById("list").innerHTML = filtered.map((x, i) => `
+    <div class="card" onclick="toggleDetails(${i})">
+      <div class="card-main">
+        <div class="rank">#${i + 1}</div>
+        <div>
+          <div class="name">${x.name}</div>
+          <div class="creator">by ${x.creator}</div>
+          <div class="difficulty">${x.difficulty}</div>
+        </div>
+        <div class="points">${x.points} pts</div>
+      </div>
+      <div class="details" id="details-${i}">
+        <div class="level-id"><strong>Level ID:</strong> ${x.id}</div>
+        <div class="video-container">
+          <iframe src="${x.videoEmbedUrl}" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  `).join("") || `<p style="text-align:center;color:#8b949e;">No levels found in ${currentTab.toUpperCase()} list.</p>`;
+}
+
+document.getElementById("search").oninput = render;
+document.getElementById("difficulty").onchange = render;
+render();
+</script>
+
+</body>
+</html>
