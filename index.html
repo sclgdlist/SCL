@@ -603,4 +603,84 @@
     }
 
     function openPlayerView(id) {
+            const updatedPlayers = recalculatePlayerPoints();
+      const p = updatedPlayers.find(item => item.id === id);
+      if(!p) return;
+
+      document.getElementById('stats-view').style.display = 'none';
+      document.getElementById('player-view').style.display = 'block';
+
+      document.getElementById('pl-name').innerText = p.name;
+      document.getElementById('pl-details').innerHTML = `
+        <div class="info-meta">
+          <div><strong>Total Points:</strong> <span style="color:var(--accent-cyan); font-weight:800;">${p.points} PTS</span></div>
+        </div>
+        <h3 style="color: var(--accent-cyan); margin-top: 20px;">Completed Levels (${p.completed.length})</h3>
+        <div class="info-meta">
+          ${p.completed.map(lvl => `<div>• ${lvl}</div>`).join('')}
+        </div>
+      `;
+    }
+
+    function filterData() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      if (currentMainTab === 'levels') {
+        const filtered = levelsData.filter(lvl => 
+          (lvl.type === currentSubTab || (!lvl.type && currentSubTab === 'main')) && lvl.title.toLowerCase().includes(query)
+        );
+        renderLevels(filtered);
+      }
+    }
+
+    function closeView() {
+      document.getElementById('level-view').style.display = 'none';
+      document.getElementById('player-view').style.display = 'none';
+      
+      if(currentMainTab === 'levels') {
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('sub-levels-nav').style.display = 'flex';
+      } else if(currentMainTab === 'stats') {
+        document.getElementById('stats-view').style.display = 'block';
+      }
+    }
+
+    document.getElementById('theme-btn').addEventListener('click', () => {
+      const isLight = document.body.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.body.removeAttribute('data-theme');
+        document.getElementById('theme-btn').innerText = '🌙 Theme';
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        document.getElementById('theme-btn').innerText = '☀️ Theme';
+      }
+    });
+
+    let rouletteIndex = 0;
+    function startRoulette() {
+      if(levelsData.length === 0) {
+        document.getElementById('roulette-target-text').innerText = 'Add levels to the list first!';
+        return;
+      }
+      rouletteIndex = 0;
+      document.getElementById('btn-next').style.display = 'inline-flex';
+      document.getElementById('btn-giveup').style.display = 'inline-flex';
+      nextRoulette();
+    }
+
+    function nextRoulette() {
+      const randomLvl = levelsData[Math.floor(Math.random() * levelsData.length)];
+      rouletteIndex++;
+      document.getElementById('roulette-target-text').innerText = `Step ${rouletteIndex}: ${randomLvl.title}`;
+    }
+
+    function giveupRoulette() {
+      document.getElementById('roulette-target-text').innerText = `Finished! Completed ${rouletteIndex - 1} levels.`;
+      document.getElementById('btn-next').style.display = 'none';
+      document.getElementById('btn-giveup').style.display = 'none';
+    }
+
+    init();
+  </script>
+</body>
+</html>
   
